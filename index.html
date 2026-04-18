@@ -1314,49 +1314,51 @@
         }
 
        // Download vCard (Correction de la permission de partage)
-        async function downloadVCard() {
+       // Download vCard (Ultra robuste avec Plan B automatique)
+        function downloadVCard() {
             const btn = document.getElementById('btn-save-contact');
             const originalText = btn.innerHTML;
             
-            // On change l'apparence du bouton
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Ouverture...';
-            btn.style.opacity = '0.8';
 
-            try {
-                // 1. On génère le fichier VCF immédiatement (sans délai)
-                const vCard = generateVCardString();
-                const fileName = (cardData.name ? cardData.name.replace(/\s+/g, '_') : 'Contact_KKS') + '.vcf';
-                const file = new File([vCard], fileName, { type: 'text/vcard' });
+            // 1. Génération immédiate
+            const vCard = generateVCardString();
+            const fileName = (cardData.name ? cardData.name.replace(/\s+/g, '_') : 'Contact_KKS') + '.vcf';
+            const file = new File([vCard], fileName, { type: 'text/vcard' });
 
-                // 2. On utilise le partage natif du téléphone
-                if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                    await navigator.share({
-                        files: [file],
-                        title: 'Contact ' + (cardData.name || ''),
-                    });
+            // Fonction de secours (Plan B) : Téléchargement classique
+            const forceDownload = () => {
+                const blob = new Blob([vCard], { type: 'text/vcard' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showToast('📥 Téléchargé ! Cliquez sur "Ouvrir" en bas de l\'écran.');
+            };
+
+            // 2. On tente le partage natif (Plan A)
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                navigator.share({
+                    files: [file],
+                    title: 'Contact ' + (cardData.name || ''),
+                }).then(() => {
+                    // Succès du Plan A
                     showToast('📱 Menu d\'enregistrement ouvert');
-                } else {
-                    // 3. SOLUTION DE SECOURS : Téléchargement classique
-                    const blob = new Blob([vCard], { type: 'text/vcard' });
-                    const url = URL.createObjectURL(blob);
-
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = fileName;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-
-                    showToast('📥 Téléchargé ! Cliquez sur "Ouvrir".');
-                }
-            } catch (err) {
-                console.log('Action annulée ou erreur:', err);
-                // Si l'utilisateur ferme juste le menu sans enregistrer, on ne fait rien de spécial
-            } finally {
-                // 4. On remet le bouton à la normale quoiqu'il arrive
+                    btn.innerHTML = originalText;
+                }).catch((err) => {
+                    // Échec du Plan A (Permission Denied) -> On lance direct le Plan B !
+                    console.log('Partage natif bloqué par le téléphone, passage au Plan B.', err);
+                    forceDownload();
+                    btn.innerHTML = originalText;
+                });
+            } else {
+                // Le téléphone ne supporte pas le partage du tout -> Plan B direct
+                forceDownload();
                 btn.innerHTML = originalText;
-                btn.style.opacity = '1';
             }
         }
 
