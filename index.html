@@ -1032,9 +1032,12 @@
                 </div>
             </div>
 
-            <button class="btn btn-primary" onclick="generateVCard()">
+
+            <button class="btn btn-primary" id="btn-save-contact" onclick="downloadVCard()">
                 <i class="fas fa-user-plus"></i> Enregistrer le contact
             </button>
+
+
 
             <button class="btn btn-secondary" onclick="shareCard()">
                 <i class="fas fa-share-alt"></i> Options de partage
@@ -1311,20 +1314,39 @@
         }
 
         // Download vCard
+       // Download vCard (avec effet visuel)
         function downloadVCard() {
-            const vCard = generateVCardString();
-            const blob = new Blob([vCard], { type: 'text/vcard' });
-            const url = URL.createObjectURL(blob);
+            const btn = document.getElementById('btn-save-contact');
+            const originalText = btn.innerHTML;
+            
+            // 1. On change l'apparence du bouton pour faire patienter
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Préparation...';
+            btn.style.opacity = '0.8';
 
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = cardData.name.replace(/\s+/g, '_') + '_contact.vcf';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
+            setTimeout(() => {
+                // 2. On génère le fichier
+                const vCard = generateVCardString();
+                const blob = new Blob([vCard], { type: 'text/vcard' });
+                const url = URL.createObjectURL(blob);
 
-            showToast('📥 Contact téléchargé ! Ouvrez le fichier .vcf');
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = cardData.name.replace(/\s+/g, '_') + '_contact.vcf';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                // 3. On remet le bouton à la normale et on affiche le message
+                btn.innerHTML = '<i class="fas fa-check"></i> Ouverture en cours...';
+                showToast('📱 Ouverture de vos contacts...');
+                
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.style.opacity = '1';
+                }, 2000);
+                
+            }, 600); // Petit délai artificiel de 0.6s pour l'animation
         }
 
         // Share functions
@@ -1453,6 +1475,10 @@
                 }
             });
         }
+
+
+
+
 
     </script>
 </body>
