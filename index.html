@@ -1313,9 +1313,7 @@
             return vCard;
         }
 
-        // Download vCard
-       // Download vCard (avec effet visuel)
-        function downloadVCard() {
+        async function downloadVCard() {
             const btn = document.getElementById('btn-save-contact');
             const originalText = btn.innerHTML;
             
@@ -1323,30 +1321,45 @@
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Préparation...';
             btn.style.opacity = '0.8';
 
-            setTimeout(() => {
-                // 2. On génère le fichier
+            setTimeout(async () => {
+                // 2. On génère le fichier VCF
                 const vCard = generateVCardString();
-                const blob = new Blob([vCard], { type: 'text/vcard' });
-                const url = URL.createObjectURL(blob);
+                const fileName = (cardData.name ? cardData.name.replace(/\s+/g, '_') : 'Contact_KKS') + '.vcf';
+                const file = new File([vCard], fileName, { type: 'text/vcard' });
 
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = cardData.name.replace(/\s+/g, '_') + '_contact.vcf';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
+                // 3. On essaie d'utiliser le partage natif du téléphone
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    try {
+                        await navigator.share({
+                            files: [file],
+                            title: 'Contact ' + (cardData.name || ''),
+                        });
+                        showToast('📱 Menu d\'enregistrement ouvert');
+                    } catch (err) {
+                        console.log('Action annulée par l\'utilisateur', err);
+                    }
+                } else {
+                    // 4. SOLUTION DE SECOURS : Téléchargement classique si le téléphone ne supporte pas le partage
+                    const blob = new Blob([vCard], { type: 'text/vcard' });
+                    const url = URL.createObjectURL(blob);
 
-                // 3. On remet le bouton à la normale et on affiche le message
-                btn.innerHTML = '<i class="fas fa-check"></i> Ouverture en cours...';
-                showToast('📱 Ouverture de vos contacts...');
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = fileName;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+
+                    // On prévient l'utilisateur de cliquer sur "Ouvrir"
+                    showToast('📥 Téléchargé ! Cliquez sur "Ouvrir" en bas de l\'écran.');
+                }
+
+                // 5. On remet le bouton à la normale
+                btn.innerHTML = originalText;
+                btn.style.opacity = '1';
                 
-                setTimeout(() => {
-                    btn.innerHTML = originalText;
-                    btn.style.opacity = '1';
-                }, 2000);
-                
-            }, 600); // Petit délai artificiel de 0.6s pour l'animation
+            }, 600);
         }
 
         // Share functions
