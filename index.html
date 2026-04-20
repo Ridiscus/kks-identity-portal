@@ -1215,10 +1215,6 @@
                     <div class="card-brand-footer" id="card-export-company">
                         KKS TECHNOLOGIES
                     </div>
-
-                    <div class="wave-avatar-container">
-                        <img src="" alt="Avatar" id="card-export-avatar" crossorigin="anonymous">
-                    </div>
                 </div>
 
                 <button class="btn btn-primary" onclick="shareCardImage()" style="margin-top: 20px; width: 100%;">
@@ -1425,12 +1421,12 @@
             }
 
             // Avatar
-            const exportAvatar = document.getElementById('card-export-avatar');
+            /*const exportAvatar = document.getElementById('card-export-avatar');
             if (cardData.photo) {
                 exportAvatar.src = cardData.photo;
             } else {
                 exportAvatar.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(cardData.name)}&background=0055ff&color=fff`;
-            }
+            }*/
 
             // Links
             if (cardData.phone) {
@@ -1448,21 +1444,39 @@
             }
         }
 
-        // Generate QR
+        // Generate QR (Format vCard direct)
         function generateQR() {
             const container = document.getElementById('qrcode');
             container.innerHTML = '';
 
-            // NOUVEAU : Au lieu d'encoder la vCard géante, on encode l'URL de ta page !
-            const cardUrl = window.location.href;
+            // 1. Découpage du nom pour le format vCard (Prénom / Nom)
+            const nameParts = (cardData.name || '').trim().split(' ');
+            const lastName = nameParts.length > 1 ? nameParts.pop() : '';
+            const firstName = nameParts.join(' ');
 
+            // 2. Construction de la chaîne de caractères vCard
+            let vcard = "BEGIN:VCARD\nVERSION:3.0\n";
+            vcard += `N:${lastName};${firstName};;;\n`;
+            vcard += `FN:${cardData.name || ''}\n`;
+            
+            if (cardData.company) vcard += `ORG:${cardData.company}\n`;
+            if (cardData.title) vcard += `TITLE:${cardData.title}\n`;
+            if (cardData.phone) vcard += `TEL;TYPE=CELL,VOICE:${cardData.phone}\n`;
+            if (cardData.email) vcard += `EMAIL;TYPE=WORK,INTERNET:${cardData.email}\n`;
+            if (cardData.website) vcard += `URL:${cardData.website}\n`;
+            // Optionnel : tu pourrais même ajouter le lien de la carte web dans les notes !
+            vcard += `NOTE:Carte digitale: ${window.location.href}\n`; 
+            
+            vcard += "END:VCARD";
+
+            // 3. Création du QR Code
             new QRCode(container, {
-                text: cardUrl, // On utilise l'URL courte
-                width: 200,
-                height: 200,
-                colorDark: '#0f172a',
-                colorLight: '#ffffff',
-                correctLevel: QRCode.CorrectLevel.M
+                text: vcard, // On passe la vCard au lieu de l'URL
+                width: 220,  // On agrandit un peu car une vCard contient plus de texte qu'un lien
+                height: 220,
+                colorDark: "#0f172a", // Bleu Nuit
+                colorLight: "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H // Toujours en "High" pour supporter le logo central
             });
         }
 
