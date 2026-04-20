@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <meta charset="UTF-8">
@@ -925,6 +926,153 @@
             .badge-body { flex-direction: column; text-align: center; }
             .badge-links { grid-template-columns: 1fr; }
         }
+
+        /* --- DESIGN PREMIUM STYLE CANVA (COULEURS KKS) --- */
+        .wave-card {
+            position: relative;
+            background: #0f172a; /* Fond Bleu Nuit très sombre (remplace le noir) */
+            width: 100%;
+            max-width: 320px;
+            aspect-ratio: 3 / 4.2;
+            margin: 0 auto;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 1;
+        }
+
+        /* Formes Géométriques (Motifs Canva) */
+        .wave-card::before { /* Forme en haut à gauche */
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 150px; height: 150px;
+            background: linear-gradient(135deg, #0055ff, transparent);
+            clip-path: polygon(0 0, 100% 0, 0 100%);
+            opacity: 0.4;
+            z-index: 0;
+        }
+
+        .wave-card::after { /* Forme en bas à droite */
+            content: '';
+            position: absolute;
+            bottom: 0; right: 0;
+            width: 180px; height: 180px;
+            background: linear-gradient(-45deg, #00e5ff, transparent);
+            clip-path: polygon(100% 0, 100% 100%, 0 100%);
+            opacity: 0.3;
+            z-index: 0;
+        }
+
+        /* Accent supplémentaire (petit triangle cyan en haut à droite) */
+        .card-accent-top {
+            position: absolute;
+            top: 0; right: 0;
+            width: 60px; height: 60px;
+            background: #00e5ff;
+            clip-path: polygon(100% 0, 100% 100%, 40% 0);
+            opacity: 0.6;
+            z-index: 0;
+        }
+
+        /* En-tête (Nom/Titre) - Style Canva */
+        .wave-header {
+            position: absolute;
+            top: 40px;
+            width: 100%;
+            text-align: center;
+            z-index: 2;
+            padding: 0 20px;
+        }
+        .wave-header h4 {
+            color: #ffffff;
+            font-size: 1.3rem;
+            font-weight: 800;
+            margin: 0;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+        .wave-header p {
+            color: #00e5ff; /* Cyan pour le poste */
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin-top: 5px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        /* Conteneur du QR Code (Style Canva avec bordure brillante) */
+        .wave-qr-container {
+            position: relative;
+            background: #ffffff;
+            padding: 12px;
+            border-radius: 12px;
+            z-index: 2;
+            margin-top: 20px;
+            box-shadow: 0 0 20px rgba(0, 229, 255, 0.2);
+        }
+
+        /* Logo KKS au centre du QR */
+        .qr-center-logo {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 38px;
+            height: 38px;
+            background: white;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 3px;
+        }
+        .qr-center-logo img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        /* Avatar (Photo de profil) en bas à droite */
+        .wave-avatar-container {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            border: 3px solid #0055ff;
+            overflow: hidden;
+            z-index: 2;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            background: #1e293b;
+        }
+        .wave-avatar-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Signature KKS en bas à gauche */
+        .card-brand-footer {
+            position: absolute;
+            bottom: 25px;
+            left: 20px;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.6rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            z-index: 2;
+        }
+
+
+
+
     </style>
 </head>
 <body>
@@ -1046,13 +1194,35 @@
 
         <div id="share-section" class="section-content">
             
-            <div class="qr-terminal">
+           <div class="qr-terminal">
                 <h3>QR Code de la carte</h3>
-                <div class="qr-box">
-                    <div id="qrcode"></div>
+                
+                <div id="shareable-wave-card" class="wave-card">
+                    <div class="card-accent-top"></div>
+                    
+                    <div class="wave-header">
+                        <h4 id="card-export-name">PRÉNOM NOM</h4>
+                        <p id="card-export-title">TITRE / POSTE</p>
+                    </div>
+
+                    <div class="wave-qr-container">
+                        <div id="qrcode"></div>
+                        <div class="qr-center-logo">
+                            <img src="mon_logo.png" alt="KKS" crossorigin="anonymous">
+                        </div>
+                    </div>
+
+                    <div class="card-brand-footer" id="card-export-company">
+                        KKS TECHNOLOGIES
+                    </div>
+
+                    <div class="wave-avatar-container">
+                        <img src="" alt="Avatar" id="card-export-avatar" crossorigin="anonymous">
+                    </div>
                 </div>
-                <button class="btn btn-secondary" onclick="shareQRImage()" style="margin-top: 15px;">
-                    <i class="fas fa-share-alt"></i> Partager l'image du QR
+
+                <button class="btn btn-primary" onclick="shareCardImage()" style="margin-top: 20px; width: 100%;">
+                    <i class="fas fa-share-alt"></i> Partager la carte
                 </button>
             </div>
 
@@ -1235,9 +1405,11 @@
 
         // Update UI
         function updateUI() {
+            // NOUVEAU : On met à jour l'aperçu visuel de la carte "Wave" en temps réel !
+            document.getElementById('card-export-name').textContent = (cardData.name || 'Prénom Nom').toUpperCase();
+            document.getElementById('card-export-title').textContent = (cardData.title || 'Poste').toUpperCase();
             document.getElementById('card-name').textContent = cardData.name;
             document.getElementById('card-title-text').textContent = cardData.title || 'Professionnel';
-            document.getElementById('card-company').textContent = cardData.company || '';
             document.getElementById('card-phone').textContent = cardData.phone || 'Non renseigné';
             document.getElementById('card-email').textContent = cardData.email || 'Non renseigné';
 
@@ -1245,14 +1417,19 @@
             let webDisplay = cardData.website ? cardData.website.replace(/^https?:\/\//, '') : '';
             document.getElementById('card-website').textContent = webDisplay || 'Site web';
 
+
+            // 🆕 Mise à jour dynamique de la signature (Entreprise)
+            const exportCompany = document.getElementById('card-export-company');
+            if (exportCompany) {
+                exportCompany.textContent = (cardData.company || 'KKS TECHNOLOGIES').toUpperCase();
+            }
+
             // Avatar
-            const avatar = document.getElementById('card-avatar');
+            const exportAvatar = document.getElementById('card-export-avatar');
             if (cardData.photo) {
-                avatar.src = cardData.photo;
+                exportAvatar.src = cardData.photo;
             } else {
-                const names = cardData.name.split(' ');
-                const initials = names.map(n => n[0]).join('');
-                avatar.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(cardData.name)}&background=6366f1&color=fff&size=200`;
+                exportAvatar.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(cardData.name)}&background=0055ff&color=fff`;
             }
 
             // Links
@@ -1487,6 +1664,63 @@
                     showToast('📥 Image du QR Code téléchargée !');
                 }
             });
+        }
+
+
+       // Partager l'image de la carte stylisée (Style Wave)
+        async function shareCardImage() {
+            const btn = event.currentTarget;
+            const originalText = btn.innerHTML;
+            const cardElement = document.getElementById('shareable-wave-card');
+            
+            // 🚨 NOUVEAU : On force la mise à jour du texte juste avant de prendre la photo !
+            // On récupère depuis cardData, et si c'est vide, on essaie de prendre directement depuis les champs (sécurité max)
+            const inputName = document.getElementById('input-name') ? document.getElementById('input-name').value : '';
+            const inputTitle = document.getElementById('input-title') ? document.getElementById('input-title').value : '';
+            
+            document.getElementById('card-export-name').textContent = cardData.name || inputName || 'Prénom Nom';
+            document.getElementById('card-export-title').textContent = cardData.title || inputTitle || 'Titre / Poste';
+
+            // On change l'apparence du bouton
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Préparation...';
+
+            try {
+                // On capture la carte
+                const canvas = await html2canvas(cardElement, {
+                    scale: 3, // Haute qualité
+                    useCORS: true,
+                    backgroundColor: null
+                });
+                
+                canvas.toBlob(async (blob) => {
+                    const file = new File([blob], 'Ma_Carte_KKS.png', { type: 'image/png' });
+                    
+                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                        try {
+                            await navigator.share({
+                                files: [file],
+                                title: 'Carte Virtuelle KKS',
+                                text: 'Scannez ce QR Code pour enregistrer mes coordonnées !'
+                            });
+                        } catch (err) {
+                            console.log('Partage annulé', err);
+                        }
+                    } else {
+                        // Téléchargement si le partage natif n'est pas dispo
+                        const link = document.createElement('a');
+                        link.download = 'Ma_Carte_KKS.png';
+                        link.href = canvas.toDataURL();
+                        link.click();
+                        showToast('📥 Image de la carte téléchargée !');
+                    }
+                    btn.innerHTML = originalText;
+                }, 'image/png');
+                
+            } catch (error) {
+                console.error("Erreur de capture :", error);
+                showToast("❌ Erreur lors de la création de l'image");
+                btn.innerHTML = originalText;
+            }
         }
 
 
